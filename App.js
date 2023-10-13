@@ -14,6 +14,7 @@ const App = () => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
+
   useEffect(() => {
     let locationWatcher = null;
 
@@ -26,11 +27,12 @@ const App = () => {
 
      
       locationWatcher = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.High , timeInterval: 1000},
+        { accuracy: Location.Accuracy.High, timeInterval: 1000 , distanceInterval: 0},
         (newLocation) => {
           setLocation(newLocation);
         }
       );
+      
       
     })();
   }, []);
@@ -73,10 +75,10 @@ const App = () => {
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: 56.1304,    // Approximate latitude for Canada's center
-          longitude: -106.3468, // Approximate longitude for Canada's center
-          latitudeDelta: 30,    // Zoom level
-          longitudeDelta: 30,   // Zoom level
+          latitude: 56.1304,   
+          longitude: -106.3468, 
+          latitudeDelta: 30,    
+          longitudeDelta: 30,   
         }}
       />
     </View>
