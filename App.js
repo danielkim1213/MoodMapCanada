@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import MapView from 'react-native-maps';
 import { styles } from './styles';
 import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
+
 
 const App = () => {
   const [mood, setMood] = useState('Neutral');
@@ -13,6 +14,9 @@ const App = () => {
 
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  const mapRef = useRef(null);
+
 
 
   useEffect(() => {
@@ -30,6 +34,14 @@ const App = () => {
         { accuracy: Location.Accuracy.High, timeInterval: 1000 , distanceInterval: 0},
         (newLocation) => {
           setLocation(newLocation);
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+                latitude: newLocation.coords.latitude,
+                longitude: newLocation.coords.longitude,
+                latitudeDelta: 0.1,
+                longitudeDelta: 0.1
+            })
+          }
         }
       );
       
@@ -52,6 +64,14 @@ const App = () => {
     const altitude = 'Altitude: ' + location.coords.altitude;
     text += altitude + 'm\n';
 
+    const latitude = 'Latitude: ' + location.coords.latitude;
+    text += latitude + '\n';
+
+    const longitude = 'Longitude: ' + location.coords.longitude;
+    text += longitude + '\n';
+
+    const speed = 'Speed: ' + location.coords.speed;
+    text += speed + 'm/s\n';
   }
 
 
@@ -73,14 +93,26 @@ const App = () => {
       <Text style={styles.paragraph}>{text}</Text>
 
       <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: 56.1304,   
-          longitude: -106.3468, 
-          latitudeDelta: 30,    
-          longitudeDelta: 30,   
-        }}
-      />
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={{
+              latitude: 56.1304,   
+              longitude: -106.3468, 
+              latitudeDelta: 30,    
+              longitudeDelta: 30,   
+          }}
+      >
+          {location && (
+              <Marker
+                  coordinate={{
+                      latitude: location.coords.latitude,
+                      longitude: location.coords.longitude
+                  }}
+                  title="Your Location"
+              />
+          )}
+      </MapView>
+
     </View>
     
   );
