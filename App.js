@@ -29,7 +29,6 @@ const App = () => {
         { accuracy: Location.Accuracy.High , timeInterval: 1000},
         (newLocation) => {
           setLocation(newLocation);
-          console.log(newLocation);
         }
       );
       
