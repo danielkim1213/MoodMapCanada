@@ -22,15 +22,13 @@ subtitle: {
     marginBottom: 20,
 },
 buttonContainer: {
-    flexDirection: 'row',  // Makes the children align horizontally
-    justifyContent: 'space-around',  // Distributes the children buttons with equal space around them
-    flexWrap: 'wrap',  // Allows buttons to wrap onto the next line if they run out of space
-    marginTop: 20,
-    marginBottom: 20,
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    flexWrap: 'wrap',
 },
 moodButton: {
-    marginVertical: 10,
-    marginHorizontal: 5,
+    margin: 5,
 },
 result: {
     marginTop: 20,
@@ -38,7 +36,7 @@ result: {
 },
 map: {
     width: '100%',
-    height: 300,
+    height: 500,
     marginTop: 20,
 }
 });

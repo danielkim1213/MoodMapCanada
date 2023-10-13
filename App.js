@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView} from 'react-native';
+import { View, Text, Button, ScrollView} from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
@@ -111,7 +111,7 @@ const App = () => {
     <ScrollView>
       <View style={styles.container}>
         <Text style={styles.title}>MoodMap</Text>
-        <Text style={styles.subtitle}>How are you feeling today?</Text>
+        <Text style={styles.subtitle}>How do you feel in {address.city}?</Text>
 
         <View style={styles.buttonContainer}>  
           {moodButtons.map((moodType, index) => (
@@ -121,11 +121,9 @@ const App = () => {
                   onPress={() => setMood(moodType)}
                   style={styles.moodButton}
               />
-          ))} 
+          ))}
         </View> 
-
-        <Text style={styles.result}>You're feeling {mood} today.</Text>
-
+        <Text style={styles.result}>You're feeling "{mood}" in {address.city}.</Text>
           
         <Text style={styles.paragraph}>{text}</Text>
 
