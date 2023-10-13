@@ -77,9 +77,6 @@ const App = () => {
     const humanReadableDate = `Time: ${dateObject.getFullYear()}-${dateObject.getMonth()+1}-${dateObject.getDate()} ${dateObject.getHours()}:${dateObject.getMinutes()}:${dateObject.getSeconds()}\n`;
     text += humanReadableDate;
 
-    const isMocked = 'Is Mocked: ' + location.mocked;
-    text += isMocked + '\n';
-
     const altitude = 'Altitude: ' + Math.round(location.coords.altitude * 1000000) / 1000000;
     text += altitude + 'm\n';
 
@@ -111,40 +108,48 @@ const App = () => {
     <ScrollView>
       <View style={styles.container}>
         <Text style={styles.title}>MoodMap</Text>
-        <Text style={styles.subtitle}>How do you feel in {address.city}?</Text>
 
-        <View style={styles.buttonContainer}>  
-          {moodButtons.map((moodType, index) => (
-              <Button
-                  key={index}
-                  title={moodType}
-                  onPress={() => setMood(moodType)}
-                  style={styles.moodButton}
-              />
-          ))}
-        </View> 
-        <Text style={styles.result}>You're feeling "{mood}" in {address.city}.</Text>
-          
-        <Text style={styles.paragraph}>{text}</Text>
+        {location && location.mocked ? (
+          <Text style={styles.paragraph}>Your location is mocked</Text>
+        ) : (
+          <>
+            <Text style={styles.subtitle}>How do you feel in {address?.city}?</Text>
 
-        <MapView
-            ref={mapRef}
-            style={styles.map}
-        >
-            {location && (
-                <Marker
-                    coordinate={{
-                        latitude: location.coords.latitude,
-                        longitude: location.coords.longitude
-                    }}
-                    title="Your Location"
-                />
-            )}
-        </MapView>
+            <View style={styles.buttonContainer}>  
+              {moodButtons.map((moodType, index) => (
+                  <Button
+                      key={index}
+                      title={moodType}
+                      onPress={() => setMood(moodType)}
+                      style={styles.moodButton}
+                  />
+              ))}
+            </View>
+
+            <Text style={styles.result}>You're feeling "{mood}" in {address?.city}.</Text>
+              
+            <Text style={styles.paragraph}>{text}</Text>
+
+            <MapView
+                ref={mapRef}
+                style={styles.map}
+            >
+                {location && (
+                    <Marker
+                        coordinate={{
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude
+                        }}
+                        title="Your Location"
+                    />
+                )}
+            </MapView>
+          </>
+        )}
       </View>
     </ScrollView>
-    
   );
+
 };
 
 
