@@ -95,12 +95,6 @@ const App = () => {
       <MapView
           ref={mapRef}
           style={styles.map}
-          initialRegion={{
-              latitude: 56.1304,   
-              longitude: -106.3468, 
-              latitudeDelta: 30,    
-              longitudeDelta: 30,   
-          }}
       >
           {location && (
               <Marker
