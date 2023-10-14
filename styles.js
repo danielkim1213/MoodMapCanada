@@ -1,42 +1,74 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-
-scrollContainer: {
-    flex: 1
-},
-container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F7F7F7',
-},
-title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    marginTop: 50,
-},
-subtitle: {
-    fontSize: 18,
-    marginBottom: 20,
-},
-buttonContainer: {
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    flexWrap: 'wrap',
-},
-moodButton: {
-    margin: 5,
-},
-result: {
-    marginTop: 20,
-    fontSize: 18,
-},
-map: {
-    width: '100%',
-    height: 500,
-    marginTop: 20,
-}
+    headerSpace: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 25,
+        backgroundColor: 'white', 
+        zIndex: 2, 
+    },
+    scrollContainer: {
+        flex: 1,
+    },
+    container: {
+        flex: 1,
+        padding: 15,
+        justifyContent: 'flex-start',  
+        alignItems: 'center',
+        backgroundColor: '#FBFCFD', 
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        color: '#333',  
+    },
+    subtitle: {
+        fontSize: 20,
+        marginBottom: 25,
+        color: '#555',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',  
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        width: '100%',  
+    },
+    moodButton: {
+        padding: 10,  
+        margin: 8,
+        backgroundColor: '#E0E0E0', 
+        borderRadius: 10,  
+        shadowColor: '#000', 
+        shadowOpacity: 0.2,
+        shadowOffset: {
+            width: 1,
+            height: 2,
+        },
+        elevation: 3,  
+    },
+    result: {
+        marginTop: 20,
+        fontSize: 20,
+        fontWeight: '600',  
+        color: '#444',
+    },
+    mapContainer: {
+        width: '100%',
+        height: 500,
+        marginTop: 30,
+        borderRadius: 30,  
+        overflow: 'hidden',  
+        borderWidth: 1,  
+        borderColor: '#E0E0E0' 
+    },
+    
+    map: {
+        width: '100%',
+        height: '100%',
+    }
 });

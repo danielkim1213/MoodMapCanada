@@ -18,8 +18,24 @@ const App = () => {
   const mapRef = useRef(null);
 
   const [address, setAddress] = useState(null);
+  const [userMovedMap, setUserMovedMap] = useState(false);
 
 
+  const handleMapDrag = () => {
+      setUserMovedMap(true);
+  };
+
+  const centerMapOnUserLocation = () => {
+      if (location && mapRef.current) {
+          mapRef.current.animateToRegion({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1
+          });
+          setUserMovedMap(false);
+      }
+  };
 
 
   useEffect(() => {
@@ -36,7 +52,7 @@ const App = () => {
             { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 0 },
             async (newLocation) => {
                 setLocation(newLocation);
-                if (mapRef.current) {
+                if (mapRef.current && !userMovedMap) {
                     mapRef.current.animateToRegion({
                         latitude: newLocation.coords.latitude,
                         longitude: newLocation.coords.longitude,
@@ -44,6 +60,7 @@ const App = () => {
                         longitudeDelta: 0.1
                     });
                 }
+              
 
                 try {
                     let results = await Location.reverseGeocodeAsync({
@@ -77,16 +94,18 @@ const App = () => {
     const humanReadableDate = `Time: ${dateObject.getFullYear()}-${dateObject.getMonth()+1}-${dateObject.getDate()} ${dateObject.getHours()}:${dateObject.getMinutes()}:${dateObject.getSeconds()}\n`;
     text += humanReadableDate;
 
-    const altitude = 'Altitude: ' + Math.round(location.coords.altitude * 1000000) / 1000000;
+    let rounding = 1000000;
+
+    const altitude = 'Altitude: ' + Math.round(location.coords.altitude * rounding) / rounding;
     text += altitude + 'm\n';
 
-    const latitude = 'Latitude: ' + Math.round(location.coords.latitude * 1000000) / 1000000;
+    const latitude = 'Latitude: ' + Math.round(location.coords.latitude * rounding) / rounding;
     text += latitude + '\n';
 
-    const longitude = 'Longitude: ' + Math.round(location.coords.longitude * 1000000) / 1000000;
+    const longitude = 'Longitude: ' + Math.round(location.coords.longitude * rounding) / rounding;
     text += longitude + '\n';
 
-    const speed = 'Speed: ' + Math.round(location.coords.speed * 1000000) / 1000000;
+    const speed = 'Speed: ' + Math.round(location.coords.speed * rounding) / rounding;
     text += speed + 'm/s\n';
 
 
@@ -105,49 +124,61 @@ const App = () => {
 
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <Text style={styles.title}>MoodMap</Text>
+    <>
+      <View style={styles.headerSpace} /> 
+      <ScrollView>
+        <View style={styles.container}>
+          <Text style={styles.title}>MoodMap</Text>
+          
+          {location && location.mocked ? (
+            <Text style={styles.paragraph}>Your location is mocked</Text>
+          ) : (
+            <>
+              <Text style={styles.subtitle}>How do you feel in {address?.city}?</Text>
 
-        {location && location.mocked ? (
-          <Text style={styles.paragraph}>Your location is mocked</Text>
-        ) : (
-          <>
-            <Text style={styles.subtitle}>How do you feel in {address?.city}?</Text>
-
-            <View style={styles.buttonContainer}>  
-              {moodButtons.map((moodType, index) => (
-                  <Button
-                      key={index}
-                      title={moodType}
-                      onPress={() => setMood(moodType)}
-                      style={styles.moodButton}
-                  />
-              ))}
-            </View>
-
-            <Text style={styles.result}>You're feeling "{mood}" in {address?.city}.</Text>
-              
-            <Text style={styles.paragraph}>{text}</Text>
-
-            <MapView
-                ref={mapRef}
-                style={styles.map}
-            >
-                {location && (
-                    <Marker
-                        coordinate={{
-                            latitude: location.coords.latitude,
-                            longitude: location.coords.longitude
-                        }}
-                        title="Your Location"
+              <View style={styles.buttonContainer}>  
+                {moodButtons.map((moodType, index) => (
+                    <Button
+                        key={index}
+                        title={moodType}
+                        onPress={() => setMood(moodType)}
+                        style={styles.moodButton}
                     />
-                )}
-            </MapView>
+                ))}
+              </View>
+
+              <Text style={styles.result}>You're feeling "{mood}" in {address?.city}.</Text>
+                
+              <Text style={styles.paragraph}>{text}</Text>
+              <View style={styles.mapContainer}>
+                <MapView
+                    ref={mapRef}
+                    style={styles.map}
+                    onRegionChangeComplete={() => setUserMovedMap(true)}
+                >
+                    {location && (
+                        <Marker
+                            coordinate={{
+                                latitude: location.coords.latitude,
+                                longitude: location.coords.longitude
+                            }}
+                            title="Your Location"
+                        />
+                    )}
+                </MapView>
+
+                
+
+              </View>
+              {userMovedMap && (
+                  <Button title="Center on My Location" onPress={centerMapOnUserLocation} />
+              )}
+
           </>
-        )}
-      </View>
-    </ScrollView>
+          )}
+        </View>
+      </ScrollView>
+    </>
   );
 
 };
