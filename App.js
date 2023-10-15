@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, ScrollView} from 'react-native';
+import { View, Text, Button, ScrollView, TextInput } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
+import { setupDatabaseAsync, insertGPSDataAsync, getGPSDataByTimestampAsync, clearGPSDataTableAsync } from './gpsDB';
+import {DateTimeSelection} from './DateTimeSelection';
 
 
 const App = () => {
@@ -18,12 +20,11 @@ const App = () => {
   const mapRef = useRef(null);
 
   const [address, setAddress] = useState(null);
-  const [userMovedMap, setUserMovedMap] = useState(false);
 
+  const [timestamp, setTimestamp] = useState('');
+  const [data, setData] = useState(null);
 
-  const handleMapDrag = () => {
-      setUserMovedMap(true);
-  };
+  const [date, setDate] = useState(new Date())
 
   const centerMapOnUserLocation = () => {
       if (location && mapRef.current) {
@@ -33,10 +34,37 @@ const App = () => {
               latitudeDelta: 0.1,
               longitudeDelta: 0.1
           });
-          setUserMovedMap(false);
       }
   };
 
+  const fetchGPSData = async () => {
+    try {
+      const formattedDate = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+      const result = await getGPSDataByTimestampAsync(formattedDate);
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  
+
+  const handleClearGPSData = async () => {
+    try {
+      await clearGPSDataTableAsync();
+      alert('GPS data cleared successfully!');
+    } catch (error) {
+      console.error('Error clearing GPS data:', error);
+      alert('Failed to clear GPS data.');
+    }
+  };
+
+
+  useEffect(() => {
+    async function initDB() {
+      await setupDatabaseAsync();
+    }
+    initDB();
+  }, []);
 
   useEffect(() => {
     let locationWatcher = null;
@@ -51,16 +79,10 @@ const App = () => {
         locationWatcher = await Location.watchPositionAsync(
             { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 0 },
             async (newLocation) => {
-                setLocation(newLocation);
-                if (mapRef.current && !userMovedMap) {
-                    mapRef.current.animateToRegion({
-                        latitude: newLocation.coords.latitude,
-                        longitude: newLocation.coords.longitude,
-                        latitudeDelta: 0.1,
-                        longitudeDelta: 0.1
-                    });
-                }
-              
+                setLocation(newLocation)
+
+                const prefix = String(newLocation.timestamp).slice(0, -3);
+                await insertGPSDataAsync(prefix, newLocation.coords.latitude, newLocation.coords.longitude);
 
                 try {
                     let results = await Location.reverseGeocodeAsync({
@@ -151,12 +173,17 @@ const App = () => {
                 
               <Text style={styles.paragraph}>{text}</Text>
               <View style={styles.mapContainer}>
-                <MapView
-                    ref={mapRef}
-                    style={styles.map}
-                    onRegionChangeComplete={() => setUserMovedMap(true)}
-                >
-                    {location && (
+                {location && (
+                  <MapView
+                      ref={mapRef}
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                        latitudeDelta: 0.1,
+                        longitudeDelta: 0.1 
+                      }}
+                  >
                         <Marker
                             coordinate={{
                                 latitude: location.coords.latitude,
@@ -164,16 +191,32 @@ const App = () => {
                             }}
                             title="Your Location"
                         />
-                    )}
-                </MapView>
+                  </MapView>
 
+              
+                )}
                 
 
               </View>
-              {userMovedMap && (
-                  <Button title="Center on My Location" onPress={centerMapOnUserLocation} />
-              )}
+              
+              <Button title="Center on My Location" onPress={centerMapOnUserLocation} />
 
+              <View style={styles.finder}>
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>Selected Date: {date.toDateString()}</Text>
+                <Text>Selected Time: {date.getHours()}:{date.getMinutes()}:{date.getSeconds()}</Text>
+                
+                <DateTimeSelection date={date} setDate={setDate} />
+
+              </View>
+
+                <Button title="Fetch GPS Data" onPress={fetchGPSData} />
+                {data && (
+                  <Text>{JSON.stringify(data) }</Text>
+                )}
+              </View>
+
+              <Button title="Clear GPS Data" onPress={handleClearGPSData} />
           </>
           )}
         </View>
@@ -182,6 +225,5 @@ const App = () => {
   );
 
 };
-
 
 export default App;
