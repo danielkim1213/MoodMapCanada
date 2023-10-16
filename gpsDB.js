@@ -53,3 +53,42 @@ export const clearGPSDataTableAsync = () => {
     });
   });
 };
+
+export const getFirstGPSDataAsync = async () => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM gpsdata ORDER BY timestamp ASC LIMIT 1;',
+        [],
+        (_, result) => resolve(result.rows._array[0].timestamp),  
+        (_, err) => reject(err)
+      );
+    });
+  });
+};
+
+export const getLastGPSDataAsync = async () => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM gpsdata ORDER BY timestamp DESC LIMIT 1;',
+        [],
+        (_, result) => resolve(result.rows._array[0].timestamp), 
+        (_, err) => reject(err)
+      );
+    });
+  });
+};
+
+export const getAllGPSDataAsync = async () => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM gpsdata;',
+        [],
+        (_, result) => resolve(result.rows._array),
+        (_, err) => reject(err)
+      );
+    });
+  });
+};

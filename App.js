@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, Button, ScrollView } from 'react-native';
+import { View, Text, Button, ScrollView, RefreshControl } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
-import { setupDatabaseAsync, insertGPSDataAsync, getGPSDataByTimestampAsync, clearGPSDataTableAsync } from './gpsDB';
+import * as gpsDB from './gpsDB';
 import { DateTimeSelect } from './dateTimeSelection';
 
 
@@ -24,6 +24,18 @@ const App = () => {
   const [data, setData] = useState(null);
 
   const [date, setDate] = useState(new Date());
+  const [minDate, setMinDate] = useState(null);
+  const [maxDate, setMaxDate] = useState(null);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 100);
+  }, []);
 
   const centerMapOnUserLocation = () => {
       if (location && mapRef.current) {
@@ -38,18 +50,19 @@ const App = () => {
 
   const fetchGPSData = async () => {
     try {
-      const formattedDate = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-      const result = await getGPSDataByTimestampAsync(formattedDate);
+      dateTimeStamp = String(date.getTime()).slice(0, -3);
+      const result = await gpsDB.getGPSDataByTimestampAsync(dateTimeStamp);
       setData(result);
+      console.log(dateTimeStamp);
     } catch (error) {
       console.error("Error fetching data:", error);
-    }
+    } 
   };
   
 
   const handleClearGPSData = async () => {
     try {
-      await clearGPSDataTableAsync();
+      await gpsDB.clearGPSDataTableAsync();
       alert('GPS data cleared successfully!');
     } catch (error) {
       console.error('Error clearing GPS data:', error);
@@ -58,13 +71,43 @@ const App = () => {
   };
 
   const dateTimeSelectComponent = useMemo(() => {
-    return <DateTimeSelect onDateChange={(date) => setDate(date)} />;
+
+      return (
+          <DateTimeSelect onDateChange={(date) => setDate(date)} />
+      );
+    
   }, []);
 
 
+  // for debug
+  const handlePrintAllData = async () => {
+    try {
+      const allData = await gpsDB.getAllGPSDataAsync();
+      console.log(allData);
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+    }
+  };
+  
+
+  useEffect(() => {
+    async function fetchDates() {
+        const minTimestamp = await gpsDB.getFirstGPSDataAsync();
+        const maxTimestamp = await gpsDB.getLastGPSDataAsync();
+        setMinDate(new Date(minTimestamp * 1000));
+        setMaxDate(new Date(maxTimestamp * 1000));
+    }
+    fetchDates();
+
+    const intervalId = setInterval(fetchDates, 10000); //interval of refreshing min/max time stamp data from db
+
+    return () => clearInterval(intervalId);
+
+  }, []);
+
   useEffect(() => {
     async function initDB() {
-      await setupDatabaseAsync();
+      await gpsDB.setupDatabaseAsync();
     }
     initDB();
   }, []);
@@ -79,15 +122,13 @@ const App = () => {
             return;
         }
 
-
         locationWatcher = await Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 0 },
+            { accuracy: Location.Accuracy.Balanced, timeInterval: 1000, distanceInterval: 0 },
             async (newLocation) => {
                 setLocation(newLocation)
 
-                const prefix = String(newLocation.timestamp).slice(0, -5);
-                await insertGPSDataAsync(prefix, newLocation.coords.latitude, newLocation.coords.longitude);
-                counter = 0;
+                const prefix = String(newLocation.timestamp).slice(0, -3);
+                await gpsDB.insertGPSDataAsync(prefix, newLocation.coords.latitude, newLocation.coords.longitude);
 
                 try {
                     let results = await Location.reverseGeocodeAsync({
@@ -153,7 +194,12 @@ const App = () => {
   return (
     <>
       <View style={styles.headerSpace} /> 
-      <ScrollView>
+      <ScrollView 
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} />
+          }>
         <View style={styles.container}>
           <Text style={styles.title}>MoodMap</Text>
           
@@ -222,7 +268,18 @@ const App = () => {
 
               <Button title="Clear GPS Data" onPress={handleClearGPSData} />
 
+              <>
+              <Text>Minimum Date: {minDate.toDateString()}</Text>
+              <Text>Minimum Time: {minDate.toTimeString()}</Text>
+              <Text>Maximum Date: {maxDate.toDateString()}</Text>
+              <Text>Maximum Time: {maxDate.toTimeString()}</Text>
+              </>
+
               {dateTimeSelectComponent}
+
+              {/* for debug */}
+              <Button title="Print All Data" onPress={handlePrintAllData} />
+
 
           </>
           )}
