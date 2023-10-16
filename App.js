@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, ScrollView, TextInput } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, Button, ScrollView } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import { setupDatabaseAsync, insertGPSDataAsync, getGPSDataByTimestampAsync, clearGPSDataTableAsync } from './gpsDB';
-import {DateTimeSelection} from './DateTimeSelection';
+import { DateTimeSelect } from './dateTimeSelection';
 
 
 const App = () => {
-  const [mood, setMood] = useState('Neutral');
+  const [mood, setMood] = useState('Neutral'); 
 
   const moodButtons = [
     'Happy', 'Sad', 'Calm', 'Excited', 'Angry'
@@ -21,10 +21,9 @@ const App = () => {
 
   const [address, setAddress] = useState(null);
 
-  const [timestamp, setTimestamp] = useState('');
   const [data, setData] = useState(null);
 
-  const [date, setDate] = useState(new Date())
+  const [date, setDate] = useState(new Date());
 
   const centerMapOnUserLocation = () => {
       if (location && mapRef.current) {
@@ -35,7 +34,7 @@ const App = () => {
               longitudeDelta: 0.1
           });
       }
-  };
+  }; 
 
   const fetchGPSData = async () => {
     try {
@@ -58,6 +57,10 @@ const App = () => {
     }
   };
 
+  const dateTimeSelectComponent = useMemo(() => {
+    return <DateTimeSelect onDateChange={(date) => setDate(date)} />;
+  }, []);
+
 
   useEffect(() => {
     async function initDB() {
@@ -76,13 +79,15 @@ const App = () => {
             return;
         }
 
+
         locationWatcher = await Location.watchPositionAsync(
             { accuracy: Location.Accuracy.High, timeInterval: 1000, distanceInterval: 0 },
             async (newLocation) => {
                 setLocation(newLocation)
 
-                const prefix = String(newLocation.timestamp).slice(0, -3);
+                const prefix = String(newLocation.timestamp).slice(0, -5);
                 await insertGPSDataAsync(prefix, newLocation.coords.latitude, newLocation.coords.longitude);
+                counter = 0;
 
                 try {
                     let results = await Location.reverseGeocodeAsync({
@@ -206,7 +211,6 @@ const App = () => {
                 <Text>Selected Date: {date.toDateString()}</Text>
                 <Text>Selected Time: {date.getHours()}:{date.getMinutes()}:{date.getSeconds()}</Text>
                 
-                <DateTimeSelection date={date} setDate={setDate} />
 
               </View>
 
@@ -217,6 +221,9 @@ const App = () => {
               </View>
 
               <Button title="Clear GPS Data" onPress={handleClearGPSData} />
+
+              {dateTimeSelectComponent}
+
           </>
           )}
         </View>
