@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, Button, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, Button, ScrollView, RefreshControl, TextInput } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
@@ -26,8 +26,18 @@ const App = () => {
   const [date, setDate] = useState(new Date());
   const [minDate, setMinDate] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  const [secondsInput, setSecondsInput] = useState('00');
 
   const [refreshing, setRefreshing] = useState(false);
+
+  const handleSecondsChange = (text) => {
+    if (!isNaN(text) && (text === '' || (Number(text) >= 0 && Number(text) <= 59))) {
+      setSecondsInput(text);
+      const newDate = new Date(date);
+      newDate.setSeconds(Number(text));
+      setDate(newDate);
+    }
+  };
 
 
   const onRefresh = React.useCallback(() => {
@@ -53,7 +63,6 @@ const App = () => {
       dateTimeStamp = String(date.getTime()).slice(0, -3);
       const result = await gpsDB.getGPSDataByTimestampAsync(dateTimeStamp);
       setData(result);
-      console.log(dateTimeStamp);
     } catch (error) {
       console.error("Error fetching data:", error);
     } 
@@ -99,7 +108,7 @@ const App = () => {
     }
     fetchDates();
 
-    const intervalId = setInterval(fetchDates, 10000); //interval of refreshing min/max time stamp data from db
+    const intervalId = setInterval(fetchDates, 5000); //interval of refreshing min/max time stamp data from db
 
     return () => clearInterval(intervalId);
 
@@ -276,6 +285,14 @@ const App = () => {
               </>
 
               {dateTimeSelectComponent}
+
+              <TextInput
+                style={styles.secondInput}
+                keyboardType="number-pad"
+                maxLength={2}
+                value={secondsInput}
+                onChangeText={handleSecondsChange}
+              ></TextInput>
 
               {/* for debug */}
               <Button title="Print All Data" onPress={handlePrintAllData} />

@@ -81,4 +81,11 @@ export const styles = StyleSheet.create({
         justifyContent: 'center', 
         alignItems: 'center' 
     },
+    secondInput: {
+        height: 40, 
+        borderColor: 'gray', 
+        borderWidth: 1, 
+        width: 100, 
+        textAlign: 'center'
+    }
 });
