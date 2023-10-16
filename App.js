@@ -100,21 +100,6 @@ const App = () => {
   
 
   useEffect(() => {
-    async function fetchDates() {
-        const minTimestamp = await gpsDB.getFirstGPSDataAsync();
-        const maxTimestamp = await gpsDB.getLastGPSDataAsync();
-        setMinDate(new Date(minTimestamp * 1000));
-        setMaxDate(new Date(maxTimestamp * 1000));
-    }
-    fetchDates();
-
-    const intervalId = setInterval(fetchDates, 5000); //interval of refreshing min/max time stamp data from db
-
-    return () => clearInterval(intervalId);
-
-  }, []);
-
-  useEffect(() => {
     async function initDB() {
       await gpsDB.setupDatabaseAsync();
     }
@@ -199,6 +184,26 @@ const App = () => {
     text += "Address: " + addressStreet + "\nCity: " + addressCity + "\nPostal Code: " + addressPostal + "\n"
   }
 
+  useEffect(() => {
+    async function fetchDates() {
+        try {
+            const minTimestamp = await gpsDB.getFirstGPSDataAsync();
+            const maxTimestamp = await gpsDB.getLastGPSDataAsync();
+            setMinDate(new Date(minTimestamp * 1000));
+            setMaxDate(new Date(maxTimestamp * 1000));
+        } catch (error) {
+            setMinDate(new Date(location.timestamp));
+            setMaxDate(new Date(location.timestamp));
+        }
+    }
+    fetchDates();
+
+    const intervalId = setInterval(fetchDates, 5000); //interval of refreshing min/max time stamp data from db
+
+    return () => clearInterval(intervalId);
+
+  }, [minDate, maxDate]);
+
 
   return (
     <>
@@ -277,12 +282,15 @@ const App = () => {
 
               <Button title="Clear GPS Data" onPress={handleClearGPSData} />
 
-              <>
-              <Text>Minimum Date: {minDate.toDateString()}</Text>
-              <Text>Minimum Time: {minDate.toTimeString()}</Text>
-              <Text>Maximum Date: {maxDate.toDateString()}</Text>
-              <Text>Maximum Time: {maxDate.toTimeString()}</Text>
-              </>
+              {minDate && maxDate && (
+                <>
+                <Text>Minimum Date: {minDate.toDateString()}</Text>
+                <Text>Minimum Time: {minDate.toTimeString()}</Text>
+                <Text>Maximum Date: {maxDate.toDateString()}</Text>
+                <Text>Maximum Time: {maxDate.toTimeString()}</Text>
+                </>
+              )}
+              
 
               {dateTimeSelectComponent}
 
