@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, Button, ScrollView, RefreshControl, TextInput } from 'react-native';
+import { View, Text, Button, ScrollView, RefreshControl, TextInput, TouchableOpacity, Image } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import * as gpsDB from './gpsDB';
 import { DateTimeSelect } from './dateTimeSelection';
+import { SvgUri } from 'react-native-svg';
 
 
 const App = () => {
@@ -24,8 +25,8 @@ const App = () => {
   const [data, setData] = useState(null);
 
   const [date, setDate] = useState(new Date());
-  const [minDate, setMinDate] = useState(null);
-  const [maxDate, setMaxDate] = useState(null);
+  const [minDate, setMinDate] = useState(new Date());
+  const [maxDate, setMaxDate] = useState(new Date());
   const [secondsInput, setSecondsInput] = useState('00');
 
   const [refreshing, setRefreshing] = useState(false);
@@ -82,7 +83,11 @@ const App = () => {
   const dateTimeSelectComponent = useMemo(() => {
 
       return (
-          <DateTimeSelect onDateChange={(date) => setDate(date)} />
+          <DateTimeSelect 
+            onDateChange={date => setDate(date)} 
+            minDate={minDate} 
+            maxDate={maxDate} 
+          />
       );
     
   }, []);
@@ -138,6 +143,8 @@ const App = () => {
             }
         );
     })();
+    
+
 
     return () => {
         if (locationWatcher) {
@@ -185,10 +192,15 @@ const App = () => {
   }
 
   useEffect(() => {
+    
     async function fetchDates() {
         try {
-            const minTimestamp = await gpsDB.getFirstGPSDataAsync();
-            const maxTimestamp = await gpsDB.getLastGPSDataAsync();
+            const minTimestampData = await gpsDB.getFirstGPSDataAsync();
+            const maxTimestampData = await gpsDB.getLastGPSDataAsync();
+            
+            const minTimestamp = minTimestampData.timestamp;
+            const maxTimestamp = maxTimestampData.timestamp;
+          
             setMinDate(new Date(minTimestamp * 1000));
             setMaxDate(new Date(maxTimestamp * 1000));
         } catch (error) {
@@ -202,7 +214,7 @@ const App = () => {
 
     return () => clearInterval(intervalId);
 
-  }, [minDate, maxDate]);
+  }, []);
 
 
   return (
@@ -239,6 +251,15 @@ const App = () => {
               <Text style={styles.paragraph}>{text}</Text>
               <View style={styles.mapContainer}>
                 {location && (
+                  <TouchableOpacity onPress={centerMapOnUserLocation} style={styles.centerButton}>
+                    <Image
+                      style={styles.currentLocationImage}
+                      source={require('./assets/current_location.png')}
+                    />
+                  </TouchableOpacity>
+                )}
+
+                {location && (
                   <MapView
                       ref={mapRef}
                       style={styles.map}
@@ -257,14 +278,13 @@ const App = () => {
                             title="Your Location"
                         />
                   </MapView>
-
               
                 )}
+
+                
                 
 
               </View>
-              
-              <Button title="Center on My Location" onPress={centerMapOnUserLocation} />
 
               <View style={styles.finder}>
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

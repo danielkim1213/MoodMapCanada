@@ -60,7 +60,7 @@ export const getFirstGPSDataAsync = async () => {
       tx.executeSql(
         'SELECT * FROM gpsdata ORDER BY timestamp ASC LIMIT 1;',
         [],
-        (_, result) => resolve(result.rows._array[0].timestamp),  
+        (_, result) => resolve(result.rows._array[0]),  
         (_, err) => reject(err)
       );
     });
@@ -73,7 +73,7 @@ export const getLastGPSDataAsync = async () => {
       tx.executeSql(
         'SELECT * FROM gpsdata ORDER BY timestamp DESC LIMIT 1;',
         [],
-        (_, result) => resolve(result.rows._array[0].timestamp), 
+        (_, result) => resolve(result.rows._array[0]), 
         (_, err) => reject(err)
       );
     });

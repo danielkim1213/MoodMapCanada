@@ -69,7 +69,7 @@ export const styles = StyleSheet.create({
     
     map: {
         width: '100%',
-        height: '100%',
+        height: '110%',
     },
     finder: {
         flex: 1, 
@@ -87,5 +87,23 @@ export const styles = StyleSheet.create({
         borderWidth: 1, 
         width: 100, 
         textAlign: 'center'
+    },
+    centerButton: {
+        width: 50, 
+        height: 50, 
+        borderRadius: 18, 
+        borderColor: 'black',
+        borderWidth: 0.7, 
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 30, 
+        right: 30, 
+        zIndex: 5,
+    },
+    currentLocationImage: { 
+        width: 37, 
+        height: 37, 
     }
 });

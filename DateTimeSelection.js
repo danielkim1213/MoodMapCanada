@@ -3,7 +3,7 @@ import { View, Text, Button } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { styles } from './styles'; 
 
-export const DateTimeSelect = ({ onDateChange }) => {
+export const DateTimeSelect = ({onDateChange, minDate, maxDate}) => {
     const [date, setDate] = useState(new Date());
     const [mode, setMode] = useState('date');
     const [show, setShow] = useState(false);
@@ -34,6 +34,8 @@ export const DateTimeSelect = ({ onDateChange }) => {
                     is24Hour={false}
                     display="spinner"
                     onChange={onChange}
+                    minimumDate={minDate}
+                    maximumDate={maxDate}
                 />
             )}
         </View>
