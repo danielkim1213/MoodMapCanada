@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { View, Text, Button, ScrollView, RefreshControl, TextInput, TouchableOpacity, Image } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Callout} from 'react-native-maps';
 import * as gpsDB from './gpsDB';
 import { DateTimeSelect } from './dateTimeSelection';
 
@@ -27,6 +27,8 @@ const App = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const [weather, setWeather] = useState(null);
+
+
 
 
   const handleSecondsChange = (text) => {
@@ -90,19 +92,54 @@ const App = () => {
     
   }, []);
 
-  const fetchWeatherData = () => {
-    const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${address.city}&aqi=yes`;
-    const forecastApiUrl = `http://api.weatherapi.com/v1/forecast.json?key=ce45479e292f40d8a27144426232310&q=${address.city}&days=3&aqi=yes`
-    
-    fetch(apiUrl)
-    .then(response => response.json())
-    .then(weatherData => {
-      console.log(weatherData);
-      setWeather(weatherData);
-    }).catch((error) => {
-      console.log(error);  // Fixed typo here from "Error" to "error"
+  const fetchCitiesInOntario = () => {
+    const apiUrl = `http://api.geonames.org/searchJSON?country=CA&adminName1=Ontario&username=kyw4091`;
+
+    return fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Extract city names from the response
+        const cityNames = data.geonames.map(city => city.name);
+        console.log(cityNames);
+        return cityNames;
+    })
+    .catch(error => {
+        console.error("Error fetching cities:", error);
     });
   };
+
+
+  const fetchWeatherData = () => {
+    fetchCitiesInOntario().then(citiesInProvince => {
+        const allWeatherData = [];
+
+        citiesInProvince.forEach(city => {
+            const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(weatherData => {
+                    allWeatherData.push({
+                        city: city,
+                        data: weatherData
+                    });
+
+                    if (allWeatherData.length === citiesInProvince.length) {
+                        console.log(allWeatherData);
+                    }
+                })
+                .catch(error => {
+                    console.log("Error fetching weather for city:", city, error);
+                });
+        });
+    });
+  };
+
 
 
 
@@ -274,8 +311,34 @@ const App = () => {
                                 latitude: location.coords.latitude,
                                 longitude: location.coords.longitude
                             }}
-                            title="Your Location"
                         />
+                        {weather && (
+                            <Marker
+                            coordinate={{
+                              latitude: location.coords.latitude,
+                              longitude: location.coords.longitude
+                            }}
+                          >
+                            <Image
+                              style={styles.weatherIcon}
+                              source={{ uri: 'http:' + weather.current.condition.icon }}
+                            />
+                            <Callout>
+                              <View style={{ width: 150, height: 200 }}>
+                              <Text>Cloud: {weather.current.cloud}</Text>
+                              <Text>Condition: {weather.current.condition.text}</Text>
+                              <Text>Feels Like (°C): {weather.current.feelslike_c}</Text>
+                              <Text>Humidity: {weather.current.humidity}</Text>
+                              <Text>Wind Speed (kph): {weather.current.wind_kph}</Text>
+                              <Text>Precip (mm): {weather.current.precip_mm}</Text>
+                              <Text>Temp (°C): {weather.current.temp_c}</Text>
+                              <Text>PM10(μg/m3): {weather.current.air_quality.pm10}</Text>
+                              <Text>PM2.5(μg/m3): {weather.current.air_quality.pm2_5}</Text>
+                              </View>
+                          </Callout>
+                          </Marker>
+                        )}
+                        
                   </MapView>
               
                 )}
@@ -339,6 +402,7 @@ const App = () => {
                     <Text>Wind Direction: {weather.current.wind_dir}</Text>
                     <Text>PM10(μg/m3): {weather.current.air_quality.pm10}</Text>
                     <Text>PM2.5(μg/m3): {weather.current.air_quality.pm2_5}</Text>
+                    
                   </View>
                 )}
               </View>

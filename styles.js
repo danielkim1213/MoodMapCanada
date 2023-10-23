@@ -111,5 +111,12 @@ export const styles = StyleSheet.create({
         alignSelf: 'center', 
         marginTop: 20, 
         marginBottom: 20,  
-    }
+    },
+    weatherIcon: {
+        width: 50,
+        height: 50, 
+        resizeMode: 'contain', 
+        borderRadius: 25, 
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    },
 });
