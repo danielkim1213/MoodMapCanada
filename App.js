@@ -51,8 +51,8 @@ const App = () => {
           mapRef.current.animateToRegion({
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
-              latitudeDelta: 0.1,
-              longitudeDelta: 0.1
+              latitudeDelta: 0.7,
+              longitudeDelta: 0.7
           });
       }
   }; 
@@ -91,7 +91,8 @@ const App = () => {
   }, []);
 
   const fetchWeatherData = () => {
-    const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${location.coords.latitude},${location.coords.longitude}`;
+    const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${address.city}&aqi=yes`;
+    const forecastApiUrl = `http://api.weatherapi.com/v1/forecast.json?key=ce45479e292f40d8a27144426232310&q=${address.city}&days=3&aqi=yes`
     
     fetch(apiUrl)
     .then(response => response.json())
@@ -336,6 +337,8 @@ const App = () => {
                     <Text>Precipitation (mm): {weather.current.precip_mm}</Text>
                     <Text>Pressure (mb): {weather.current.pressure_mb}</Text>
                     <Text>Wind Direction: {weather.current.wind_dir}</Text>
+                    <Text>PM10(μg/m3): {weather.current.air_quality.pm10}</Text>
+                    <Text>PM2.5(μg/m3): {weather.current.air_quality.pm2_5}</Text>
                   </View>
                 )}
               </View>
