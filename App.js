@@ -114,34 +114,36 @@ const App = () => {
 
 
   const fetchWeatherData = () => {
-    fetchCitiesInOntario().then(citiesInProvince => {
-        const allWeatherData = [];
+    // fetchCitiesInOntario().then(citiesInProvince => {
+    //     const allWeatherData = [];
 
-        citiesInProvince.forEach(city => {
-            const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
+    //     citiesInProvince.forEach(city => {
+    //         const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(weatherData => {
+    //         fetch(apiUrl)
+    //             .then(response => response.json())
+    //             .then(weatherData => {
 
-                  if (allWeatherData.length == citiesInProvince.length) {
-                    console.log(allWeatherData);
-                    setWeatherData(allWeatherData);
-                  }
+    //               if (allWeatherData.length == citiesInProvince.length) {
+    //                 console.log(allWeatherData);
+    //                 setWeatherData(allWeatherData);
+    //               }
                     
-                  allWeatherData.push({
-                      city: city,
-                      data: weatherData
-                  });
+    //               allWeatherData.push({
+    //                   city: city,
+    //                   data: weatherData
+    //               });
 
                     
-                }) 
-                .catch(error => {
-                    console.log("Error fetching weather for city:", city, error);
-                });
-        });
-    });
-    console.log(weatherData);
+    //             }) 
+    //             .catch(error => {
+    //                 console.log("Error fetching weather for city:", city, error);
+    //             });
+    //     });
+    // });
+    // console.log(weatherData);
+
+    
   };
 
 
