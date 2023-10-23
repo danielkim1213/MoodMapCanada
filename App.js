@@ -1,19 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { View, Text, Button, ScrollView, RefreshControl, TextInput, TouchableOpacity, Image } from 'react-native';
 import { styles } from './styles';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import * as gpsDB from './gpsDB';
 import { DateTimeSelect } from './dateTimeSelection';
-import { SvgUri } from 'react-native-svg';
+
 
 
 const App = () => {
-  const [mood, setMood] = useState('Neutral'); 
-
-  const moodButtons = [
-    'Happy', 'Sad', 'Calm', 'Excited', 'Angry'
-  ];
 
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -31,6 +26,9 @@ const App = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  const [weather, setWeather] = useState(null);
+
+
   const handleSecondsChange = (text) => {
     if (!isNaN(text) && (text === '' || (Number(text) >= 0 && Number(text) <= 59))) {
       setSecondsInput(text);
@@ -41,7 +39,7 @@ const App = () => {
   };
 
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
@@ -91,6 +89,20 @@ const App = () => {
       );
     
   }, []);
+
+  const fetchWeatherData = () => {
+    const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${location.coords.latitude},${location.coords.longitude}`;
+    
+    fetch(apiUrl)
+    .then(response => response.json())
+    .then(weatherData => {
+      console.log(weatherData);
+      setWeather(weatherData);
+    }).catch((error) => {
+      console.log(error);  // Fixed typo here from "Error" to "error"
+    });
+  };
+
 
 
   // for debug
@@ -215,6 +227,7 @@ const App = () => {
     return () => clearInterval(intervalId);
 
   }, []);
+  
 
 
   return (
@@ -227,27 +240,12 @@ const App = () => {
             onRefresh={onRefresh} />
           }>
         <View style={styles.container}>
-          <Text style={styles.title}>MoodMap</Text>
+          <Text style={styles.title}>WeatherMap</Text>
           
           {location && location.mocked ? (
             <Text style={styles.paragraph}>Your location is mocked</Text>
           ) : (
             <>
-              <Text style={styles.subtitle}>How do you feel in {address?.city}?</Text>
-
-              <View style={styles.buttonContainer}>  
-                {moodButtons.map((moodType, index) => (
-                    <Button
-                        key={index}
-                        title={moodType}
-                        onPress={() => setMood(moodType)}
-                        style={styles.moodButton}
-                    />
-                ))}
-              </View>
-
-              <Text style={styles.result}>You're feeling "{mood}" in {address?.city}.</Text>
-                
               <Text style={styles.paragraph}>{text}</Text>
               <View style={styles.mapContainer}>
                 {location && (
@@ -324,6 +322,24 @@ const App = () => {
 
               {/* for debug */}
               <Button title="Print All Data" onPress={handlePrintAllData} />
+
+              <View style={{ padding: 20 }}>
+                <Button title="Get Weather" onPress={fetchWeatherData} />
+
+                {weather && (
+                  <View style={{ marginTop: 20 }}>
+                    <Text>Cloud: {weather.current.cloud}</Text>
+                    <Text>Condition: {weather.current.condition.text}</Text>
+                    <Text>Feels Like (°C): {weather.current.feelslike_c}</Text>
+                    <Text>Humidity: {weather.current.humidity}</Text>
+                    <Text>Wind Speed (kph): {weather.current.wind_kph}</Text>
+                    <Text>Precipitation (mm): {weather.current.precip_mm}</Text>
+                    <Text>Pressure (mb): {weather.current.pressure_mb}</Text>
+                    <Text>Wind Direction: {weather.current.wind_dir}</Text>
+                  </View>
+                )}
+              </View>
+
 
 
           </>

@@ -93,17 +93,23 @@ export const styles = StyleSheet.create({
         height: 50, 
         borderRadius: 18, 
         borderColor: 'black',
-        borderWidth: 0.7, 
-        backgroundColor: 'rgba(255, 255, 255, 1)',
+        borderWidth: 2, 
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        bottom: 30, 
-        right: 30, 
+        bottom: 20, 
+        right: 20, 
         zIndex: 5,
     },
     currentLocationImage: { 
         width: 37, 
         height: 37, 
+    },
+    timeSlider: {
+        width: '70%', 
+        alignSelf: 'center', 
+        marginTop: 20, 
+        marginBottom: 20,  
     }
 });
