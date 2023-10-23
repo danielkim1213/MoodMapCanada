@@ -106,12 +106,6 @@ export const styles = StyleSheet.create({
         width: 37, 
         height: 37, 
     },
-    timeSlider: {
-        width: '70%', 
-        alignSelf: 'center', 
-        marginTop: 20, 
-        marginBottom: 20,  
-    },
     weatherIcon: {
         width: 50,
         height: 50, 

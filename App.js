@@ -26,7 +26,7 @@ const App = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const [weather, setWeather] = useState(null);
+  const [weatherData, setWeatherData] = useState([]);
 
 
 
@@ -105,7 +105,6 @@ const App = () => {
     .then(data => {
         // Extract city names from the response
         const cityNames = data.geonames.map(city => city.name);
-        console.log(cityNames);
         return cityNames;
     })
     .catch(error => {
@@ -124,20 +123,25 @@ const App = () => {
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(weatherData => {
-                    allWeatherData.push({
-                        city: city,
-                        data: weatherData
-                    });
 
-                    if (allWeatherData.length === citiesInProvince.length) {
-                        console.log(allWeatherData);
-                    }
-                })
+                  if (allWeatherData.length == citiesInProvince.length) {
+                    console.log(allWeatherData);
+                    setWeatherData(allWeatherData);
+                  }
+                    
+                  allWeatherData.push({
+                      city: city,
+                      data: weatherData
+                  });
+
+                    
+                }) 
                 .catch(error => {
                     console.log("Error fetching weather for city:", city, error);
                 });
         });
     });
+    console.log(weatherData);
   };
 
 
@@ -312,32 +316,33 @@ const App = () => {
                                 longitude: location.coords.longitude
                             }}
                         />
-                        {weather && (
+                        {/* {weatherData.map(cityWeather => (
                             <Marker
-                            coordinate={{
-                              latitude: location.coords.latitude,
-                              longitude: location.coords.longitude
-                            }}
-                          >
-                            <Image
-                              style={styles.weatherIcon}
-                              source={{ uri: 'http:' + weather.current.condition.icon }}
-                            />
-                            <Callout>
-                              <View style={{ width: 150, height: 200 }}>
-                              <Text>Cloud: {weather.current.cloud}</Text>
-                              <Text>Condition: {weather.current.condition.text}</Text>
-                              <Text>Feels Like (°C): {weather.current.feelslike_c}</Text>
-                              <Text>Humidity: {weather.current.humidity}</Text>
-                              <Text>Wind Speed (kph): {weather.current.wind_kph}</Text>
-                              <Text>Precip (mm): {weather.current.precip_mm}</Text>
-                              <Text>Temp (°C): {weather.current.temp_c}</Text>
-                              <Text>PM10(μg/m3): {weather.current.air_quality.pm10}</Text>
-                              <Text>PM2.5(μg/m3): {weather.current.air_quality.pm2_5}</Text>
-                              </View>
-                          </Callout>
-                          </Marker>
-                        )}
+                                key={cityWeather.city}
+                                coordinate={{
+                                    latitude: cityWeather.data.location.lat,
+                                    longitude: cityWeather.data.location.lon
+                                }}
+                            >
+                                <Image
+                                    style={styles.weatherIcon}
+                                    source={{ uri: 'http:' + cityWeather.data.current.condition.icon }}
+                                />
+                                <Callout>
+                                  <Text>Cloud: {cityWeather.data.current.cloud}</Text>
+                                  <Text>Condition: {cityWeather.data.current.condition.text}</Text>
+                                  <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
+                                  <Text>Humidity: {cityWeather.data.current.humidity}</Text>
+                                  <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
+                                  <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
+                                  <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
+                                  <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
+                                  <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
+                                  <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
+                                </Callout>
+                            </Marker>
+                          ))
+                        } */}
                         
                   </MapView>
               
@@ -390,21 +395,6 @@ const App = () => {
               <View style={{ padding: 20 }}>
                 <Button title="Get Weather" onPress={fetchWeatherData} />
 
-                {weather && (
-                  <View style={{ marginTop: 20 }}>
-                    <Text>Cloud: {weather.current.cloud}</Text>
-                    <Text>Condition: {weather.current.condition.text}</Text>
-                    <Text>Feels Like (°C): {weather.current.feelslike_c}</Text>
-                    <Text>Humidity: {weather.current.humidity}</Text>
-                    <Text>Wind Speed (kph): {weather.current.wind_kph}</Text>
-                    <Text>Precipitation (mm): {weather.current.precip_mm}</Text>
-                    <Text>Pressure (mb): {weather.current.pressure_mb}</Text>
-                    <Text>Wind Direction: {weather.current.wind_dir}</Text>
-                    <Text>PM10(μg/m3): {weather.current.air_quality.pm10}</Text>
-                    <Text>PM2.5(μg/m3): {weather.current.air_quality.pm2_5}</Text>
-                    
-                  </View>
-                )}
               </View>
 
 
