@@ -7,7 +7,6 @@ import * as gpsDB from './gpsDB';
 import { DateTimeSelect } from './dateTimeSelection';
 
 
-
 const App = () => {
 
   const [location, setLocation] = useState(null);
@@ -30,6 +29,40 @@ const App = () => {
 
 
 
+  const WeatherMarkers = ({ weatherData }) => {
+    // for (let key in weatherData) {
+    //   if (weatherData.hasOwnProperty(key)) {
+    //       console.log(key, weatherData[key]); 
+    //   }
+    // }
+    console.log(cityWeather);
+    return useMemo(() => (
+        <Marker
+            key={cityWeather.city}
+            coordinate={{
+                latitude: cityWeather.data.location.lat,
+                longitude: cityWeather.data.location.lon
+            }}
+        >
+            <Image
+                style={styles.weatherIcon}
+                source={{ uri: 'http:' + cityWeather.data.current.condition.icon }}
+            />
+            <Callout>
+              <Text>Cloud: {cityWeather.data.current.cloud}</Text>
+              <Text>Condition: {cityWeather.data.current.condition.text}</Text>
+              <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
+              <Text>Humidity: {cityWeather.data.current.humidity}</Text>
+              <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
+              <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
+              <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
+              <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
+              <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
+              <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
+            </Callout>
+        </Marker>
+    ),[weatherData]);
+  };
 
   const handleSecondsChange = (text) => {
     if (!isNaN(text) && (text === '' || (Number(text) >= 0 && Number(text) <= 59))) {
@@ -114,36 +147,36 @@ const App = () => {
 
 
   const fetchWeatherData = () => {
-    // fetchCitiesInOntario().then(citiesInProvince => {
-    //     const allWeatherData = [];
+    fetchCitiesInOntario().then(citiesInProvince => {
+      const allWeatherData = [];
+      const lastCity = citiesInProvince[citiesInProvince.length - 1];
 
-    //     citiesInProvince.forEach(city => {
-    //         const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
 
-    //         fetch(apiUrl)
-    //             .then(response => response.json())
-    //             .then(weatherData => {
+      citiesInProvince.forEach(city => {
+        const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
 
-    //               if (allWeatherData.length == citiesInProvince.length) {
-    //                 console.log(allWeatherData);
-    //                 setWeatherData(allWeatherData);
-    //               }
-                    
-    //               allWeatherData.push({
-    //                   city: city,
-    //                   data: weatherData
-    //               });
+        fetch(apiUrl)
+        .then(response => response.json())
+        .then(weatherData => {
+            
+          allWeatherData.push({
+              city: city,
+              data: weatherData
+          });
 
-                    
-    //             }) 
-    //             .catch(error => {
-    //                 console.log("Error fetching weather for city:", city, error);
-    //             });
-    //     });
-    // });
-    // console.log(weatherData);
+          if (city == lastCity) {
+            setWeatherData(allWeatherData);
+            return(allWeatherData);
+          }
 
-    
+            
+        }) 
+        .catch(error => {
+            console.log("Error fetching weather for city:", city, error);
+        });
+      });
+    });
+    console.log(weatherData);
   };
 
 
@@ -318,33 +351,7 @@ const App = () => {
                                 longitude: location.coords.longitude
                             }}
                         />
-                        {/* {weatherData.map(cityWeather => (
-                            <Marker
-                                key={cityWeather.city}
-                                coordinate={{
-                                    latitude: cityWeather.data.location.lat,
-                                    longitude: cityWeather.data.location.lon
-                                }}
-                            >
-                                <Image
-                                    style={styles.weatherIcon}
-                                    source={{ uri: 'http:' + cityWeather.data.current.condition.icon }}
-                                />
-                                <Callout>
-                                  <Text>Cloud: {cityWeather.data.current.cloud}</Text>
-                                  <Text>Condition: {cityWeather.data.current.condition.text}</Text>
-                                  <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
-                                  <Text>Humidity: {cityWeather.data.current.humidity}</Text>
-                                  <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
-                                  <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
-                                  <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
-                                  <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
-                                  <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
-                                  <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
-                                </Callout>
-                            </Marker>
-                          ))
-                        } */}
+                        {/* {weatherData.length > 0 && <WeatherMarkers weatherData={weatherData} />} */}
                         
                   </MapView>
               
@@ -391,7 +398,6 @@ const App = () => {
                 onChangeText={handleSecondsChange}
               ></TextInput>
 
-              {/* for debug */}
               <Button title="Print All Data" onPress={handlePrintAllData} />
 
               <View style={{ padding: 20 }}>
