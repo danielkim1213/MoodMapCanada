@@ -9,7 +9,7 @@ import { DateTimeSelect } from './dateTimeSelection';
 
 const App = () => {
 
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null); 
   const [errorMsg, setErrorMsg] = useState(null);
 
   const mapRef = useRef(null);
@@ -28,41 +28,73 @@ const App = () => {
   const [weatherData, setWeatherData] = useState([]);
 
 
-
-  const WeatherMarkers = ({ weatherData }) => {
-    // for (let key in weatherData) {
-    //   if (weatherData.hasOwnProperty(key)) {
-    //       console.log(key, weatherData[key]); 
-    //   }
-    // }
-    console.log(cityWeather);
-    return useMemo(() => (
-        <Marker
-            key={cityWeather.city}
-            coordinate={{
-                latitude: cityWeather.data.location.lat,
-                longitude: cityWeather.data.location.lon
-            }}
-        >
+  const mapComponent = useMemo(() => {
+    return (
+      <View style={styles.mapContainer}>
+        {location && (
+          <TouchableOpacity onPress={centerMapOnUserLocation} style={styles.centerButton}>
             <Image
-                style={styles.weatherIcon}
-                source={{ uri: 'http:' + cityWeather.data.current.condition.icon }}
+              style={styles.currentLocationImage}
+              source={require('./assets/current_location.png')}
             />
-            <Callout>
-              <Text>Cloud: {cityWeather.data.current.cloud}</Text>
-              <Text>Condition: {cityWeather.data.current.condition.text}</Text>
-              <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
-              <Text>Humidity: {cityWeather.data.current.humidity}</Text>
-              <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
-              <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
-              <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
-              <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
-              <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
-              <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
-            </Callout>
-        </Marker>
-    ),[weatherData]);
-  };
+          </TouchableOpacity>
+        )}
+
+        {location && (
+          <MapView
+              ref={mapRef}
+              style={styles.map}
+              initialRegion={{
+                latitude: location ? location.coords.latitude : 0,
+                longitude: location ? location.coords.longitude : 0,
+                latitudeDelta: 0.1,
+                longitudeDelta: 0.1 
+              }}
+          >
+                <Marker
+                    title="Your location"
+                    coordinate={{
+                        latitude: location ? location.coords.latitude : 0,
+                        longitude: location ? location.coords.longitude : 0
+                    }}
+                />
+                {weatherData.length > 0 && (weatherData.map(cityWeather => (
+                  <Marker
+                      key={cityWeather.city}
+                      coordinate={{
+                        latitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lat : 0,
+                        longitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lon : 0,                  
+                      }}
+                  >
+                      {/* <Image
+                          style={styles.weatherIcon}
+                          source={{ uri: 'http:' + (cityWeather.data && cityWeather.data.current ? cityWeather.data.current.condition : null) }}
+                      /> */}
+                      {(cityWeather.data.current) &&
+                        <Callout>
+                            <Text>Cloud: {cityWeather.data.current.cloud}</Text>
+                            <Text>Condition: {cityWeather.data.current.condition.text}</Text>
+                            <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
+                            <Text>Humidity: {cityWeather.data.current.humidity}</Text>
+                            <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
+                            <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
+                            <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
+                            <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
+                            <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
+                            <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
+                        </Callout>
+                      } 
+                  </Marker>
+              )))}
+                
+          </MapView>
+        )}
+
+      </View>
+    );
+  }, [weatherData, mapRef]);
+
+
 
   const handleSecondsChange = (text) => {
     if (!isNaN(text) && (text === '' || (Number(text) >= 0 && Number(text) <= 59))) {
@@ -113,8 +145,9 @@ const App = () => {
     }
   };
 
+  //수정 해야 할 점: useMemo [] 안에 아무것도 없기에 처음 minDate 가 db를 읽지 않은 채로 기본 값이 들어가고, 그 상태에서 프로그램을 
+  //다시 저장 하지 않으면 계속 그 상태를 유지함
   const dateTimeSelectComponent = useMemo(() => {
-
       return (
           <DateTimeSelect 
             onDateChange={date => setDate(date)} 
@@ -136,9 +169,15 @@ const App = () => {
         return response.json();
     })
     .then(data => {
-        // Extract city names from the response
-        const cityNames = data.geonames.map(city => city.name);
-        return cityNames;
+      const filteredCities = data.geonames.filter(city => city.adminName1 === "Ontario");
+
+      // Extract city infos from the response
+      const loc = filteredCities.map(city => ({
+        name: city.name,
+        lat: city.lat,
+        lon: city.lng
+      }));
+      return loc;
     })
     .catch(error => {
         console.error("Error fetching cities:", error);
@@ -147,28 +186,27 @@ const App = () => {
 
 
   const fetchWeatherData = () => {
-    fetchCitiesInOntario().then(citiesInProvince => {
+    fetchCitiesInOntario().then(loc => {
       const allWeatherData = [];
-      const lastCity = citiesInProvince[citiesInProvince.length - 1];
+      const lastCity = loc[loc.length - 1].lat;
 
 
-      citiesInProvince.forEach(city => {
-        const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${city}&aqi=yes`;
+      loc.forEach(cityLocation => {
+        const apiUrl = `http://api.weatherapi.com/v1/current.json?key=ce45479e292f40d8a27144426232310&q=${cityLocation.lat},${cityLocation.lon}&aqi=yes`;
 
         fetch(apiUrl)
         .then(response => response.json())
         .then(weatherData => {
             
           allWeatherData.push({
-              city: city,
+              city: cityLocation.name,
               data: weatherData
           });
 
-          if (city == lastCity) {
+          if (cityLocation.lat == lastCity) {
             setWeatherData(allWeatherData);
             return(allWeatherData);
           }
-
             
         }) 
         .catch(error => {
@@ -176,7 +214,6 @@ const App = () => {
         });
       });
     });
-    console.log(weatherData);
   };
 
 
@@ -192,6 +229,9 @@ const App = () => {
     }
   };
   
+  useEffect(() => {
+    fetchWeatherData();
+  },[]);
 
   useEffect(() => {
     async function initDB() {
@@ -295,6 +335,7 @@ const App = () => {
         } catch (error) {
             setMinDate(new Date(location.timestamp));
             setMaxDate(new Date(location.timestamp));
+            console.error("setting min/max data error: " + error);  
         }
     }
     fetchDates();
@@ -324,43 +365,7 @@ const App = () => {
           ) : (
             <>
               <Text style={styles.paragraph}>{text}</Text>
-              <View style={styles.mapContainer}>
-                {location && (
-                  <TouchableOpacity onPress={centerMapOnUserLocation} style={styles.centerButton}>
-                    <Image
-                      style={styles.currentLocationImage}
-                      source={require('./assets/current_location.png')}
-                    />
-                  </TouchableOpacity>
-                )}
-
-                {location && (
-                  <MapView
-                      ref={mapRef}
-                      style={styles.map}
-                      initialRegion={{
-                        latitude: location.coords.latitude,
-                        longitude: location.coords.longitude,
-                        latitudeDelta: 0.1,
-                        longitudeDelta: 0.1 
-                      }}
-                  >
-                        <Marker
-                            coordinate={{
-                                latitude: location.coords.latitude,
-                                longitude: location.coords.longitude
-                            }}
-                        />
-                        {/* {weatherData.length > 0 && <WeatherMarkers weatherData={weatherData} />} */}
-                        
-                  </MapView>
-              
-                )}
-
-                
-                
-
-              </View>
+              {mapComponent}
 
               <View style={styles.finder}>
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
