@@ -29,70 +29,41 @@ const App = () => {
 
 
   const mapComponent = useMemo(() => {
+    console.log("running");
     return (
-      <View style={styles.mapContainer}>
-        {location && (
-          <TouchableOpacity onPress={centerMapOnUserLocation} style={styles.centerButton}>
-            <Image
-              style={styles.currentLocationImage}
-              source={require('./assets/current_location.png')}
-            />
-          </TouchableOpacity>
-        )}
-
-        {location && (
-          <MapView
-              ref={mapRef}
-              style={styles.map}
-              initialRegion={{
-                latitude: location ? location.coords.latitude : 0,
-                longitude: location ? location.coords.longitude : 0,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1 
+      <>
+        {weatherData.length > 0 && (weatherData.map(cityWeather => (
+          <Marker
+              key={cityWeather.city}
+              coordinate={{
+                latitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lat : 0,
+                longitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lon : 0,                  
               }}
           >
-                <Marker
-                    title="Your location"
-                    coordinate={{
-                        latitude: location ? location.coords.latitude : 0,
-                        longitude: location ? location.coords.longitude : 0
-                    }}
-                />
-                {weatherData.length > 0 && (weatherData.map(cityWeather => (
-                  <Marker
-                      key={cityWeather.city}
-                      coordinate={{
-                        latitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lat : 0,
-                        longitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lon : 0,                  
-                      }}
-                  >
-                      {/* <Image
-                          style={styles.weatherIcon}
-                          source={{ uri: 'http:' + (cityWeather.data && cityWeather.data.current ? cityWeather.data.current.condition : null) }}
-                      /> */}
-                      {(cityWeather.data.current) &&
-                        <Callout>
-                            <Text>Cloud: {cityWeather.data.current.cloud}</Text>
-                            <Text>Condition: {cityWeather.data.current.condition.text}</Text>
-                            <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
-                            <Text>Humidity: {cityWeather.data.current.humidity}</Text>
-                            <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
-                            <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
-                            <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
-                            <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
-                            <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
-                            <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
-                        </Callout>
-                      } 
-                  </Marker>
-              )))}
-                
-          </MapView>
-        )}
-
-      </View>
+              {/* <Image
+                  style={styles.weatherIcon}
+                  source={{ uri: 'http:' + (cityWeather.data && cityWeather.data.current ? cityWeather.data.current.condition : null) }}
+              /> */}
+              {(cityWeather.data.current) &&
+                <Callout>
+                    <Text>Cloud: {cityWeather.data.current.cloud}</Text>
+                    <Text>Condition: {cityWeather.data.current.condition.text}</Text>
+                    <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
+                    <Text>Humidity: {cityWeather.data.current.humidity}</Text>
+                    <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
+                    <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
+                    <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
+                    <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
+                    <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
+                    <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
+                </Callout>
+              } 
+          </Marker>
+        )))}
+        
+      </>
     );
-  }, [weatherData, mapRef]);
+  }, [weatherData]);
 
 
 
@@ -365,7 +336,37 @@ const App = () => {
           ) : (
             <>
               <Text style={styles.paragraph}>{text}</Text>
-              {mapComponent}
+              <View style={styles.mapContainer}>
+                {location && (
+                  <TouchableOpacity onPress={centerMapOnUserLocation} style={styles.centerButton}>
+                    <Image
+                      style={styles.currentLocationImage}
+                      source={require('./assets/current_location.png')}
+                    />
+                  </TouchableOpacity>
+                )}
+                {location && (
+                  <MapView
+                      ref={mapRef}
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: location ? location.coords.latitude : 0,
+                        longitude: location ? location.coords.longitude : 0,
+                        latitudeDelta: 0.1,
+                        longitudeDelta: 0.1 
+                      }}
+                  >
+                    <Marker
+                        title="Your location"
+                        coordinate={{
+                            latitude: location ? location.coords.latitude : 0,
+                            longitude: location ? location.coords.longitude : 0
+                        }}
+                    />
+                    {mapComponent}
+                  </MapView>  
+                )}
+              </View>
 
               <View style={styles.finder}>
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
