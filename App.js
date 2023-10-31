@@ -27,9 +27,30 @@ const App = () => {
 
   const [weatherData, setWeatherData] = useState([]);
 
+  const [selectedWeather, setSelectedWeather] = useState("");
+
+  const getWeatherText = (cityWeather) => {
+    let weatherText = "Cloud: " + cityWeather.data.current.cloud;
+    weatherText += "\nCondition: " + cityWeather.data.current.condition.text;
+    weatherText += "\nFeels Like (°C): " + cityWeather.data.current.feelslike_c;
+    weatherText += "\nHumidity: " + cityWeather.data.current.humidity;
+    weatherText += "\nWind Speed (kph): " + cityWeather.data.current.wind_kph;
+    weatherText += "\nPrecipitation (mm): " + cityWeather.data.current.precip_mm;
+    weatherText += "\nPressure (mb): " + cityWeather.data.current.pressure_mb;
+    weatherText += "\nWind Direction: " + cityWeather.data.current.wind_dir;
+    weatherText += "\nPM10(μg/m3): " + cityWeather.data.current.air_quality.pm10;
+    weatherText += "\nPM2.5(μg/m3): " + cityWeather.data.current.air_quality.pm2_5;
+    return weatherText;
+  }
 
   const mapComponent = useMemo(() => {
-    console.log("running");
+    if(weatherData.length == 0){
+      console.log("no weather DATA!");
+      return (null)
+    }
+
+
+    console.log("running.!!");
     return (
       <>
         {weatherData.length > 0 && (weatherData.map(cityWeather => (
@@ -39,25 +60,12 @@ const App = () => {
                 latitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lat : 0,
                 longitude: cityWeather.data && cityWeather.data.location ? cityWeather.data.location.lon : 0,                  
               }}
+              onPress={() => {setSelectedWeather(getWeatherText(cityWeather))}}
           >
-              {/* <Image
+              <Image
                   style={styles.weatherIcon}
-                  source={{ uri: 'http:' + (cityWeather.data && cityWeather.data.current ? cityWeather.data.current.condition : null) }}
-              /> */}
-              {(cityWeather.data.current) &&
-                <Callout>
-                    <Text>Cloud: {cityWeather.data.current.cloud}</Text>
-                    <Text>Condition: {cityWeather.data.current.condition.text}</Text>
-                    <Text>Feels Like (°C): {cityWeather.data.current.feelslike_c}</Text>
-                    <Text>Humidity: {cityWeather.data.current.humidity}</Text>
-                    <Text>Wind Speed (kph): {cityWeather.data.current.wind_kph}</Text>
-                    <Text>Precipitation (mm): {cityWeather.data.current.precip_mm}</Text>
-                    <Text>Pressure (mb): {cityWeather.data.current.pressure_mb}</Text>
-                    <Text>Wind Direction: {cityWeather.data.current.wind_dir}</Text>
-                    <Text>PM10(μg/m3): {cityWeather.data.current.air_quality.pm10}</Text>
-                    <Text>PM2.5(μg/m3): {cityWeather.data.current.air_quality.pm2_5}</Text>
-                </Callout>
-              } 
+                  source={{ uri: 'http:' + (cityWeather.data && cityWeather.data.current ? cityWeather.data.current.condition.icon : null) }}
+              />
           </Marker>
         )))}
         
@@ -130,7 +138,7 @@ const App = () => {
   }, []);
 
   const fetchCitiesInOntario = () => {
-    const apiUrl = `http://api.geonames.org/searchJSON?country=CA&adminName1=Ontario&username=kyw4091`;
+    const apiUrl = `http://api.geonames.org/searchJSON?country=CA&adminName=ON&cities=cities15000&username=kyw4091`;
 
     return fetch(apiUrl)
     .then(response => {
@@ -167,11 +175,11 @@ const App = () => {
 
         fetch(apiUrl)
         .then(response => response.json())
-        .then(weatherData => {
+        .then(weatherCurrent => {
             
           allWeatherData.push({
               city: cityLocation.name,
-              data: weatherData
+              data: weatherCurrent
           });
 
           if (cityLocation.lat == lastCity) {
@@ -199,10 +207,8 @@ const App = () => {
       console.error("Error fetching all data:", error);
     }
   };
-  
-  useEffect(() => {
-    fetchWeatherData();
-  },[]);
+
+
 
   useEffect(() => {
     async function initDB() {
@@ -222,7 +228,7 @@ const App = () => {
         }
 
         locationWatcher = await Location.watchPositionAsync(
-            { accuracy: Location.Accuracy.Balanced, timeInterval: 1000, distanceInterval: 0 },
+            { accuracy: Location.Accuracy.Balanced, timeInterval: 10000, distanceInterval: 0 },
             async (newLocation) => {
                 setLocation(newLocation)
 
@@ -311,7 +317,7 @@ const App = () => {
     }
     fetchDates();
 
-    const intervalId = setInterval(fetchDates, 5000); //interval of refreshing min/max time stamp data from db
+    const intervalId = setInterval(fetchDates, 10000); //interval of refreshing min/max time stamp data from db
 
     return () => clearInterval(intervalId);
 
@@ -350,8 +356,8 @@ const App = () => {
                       ref={mapRef}
                       style={styles.map}
                       initialRegion={{
-                        latitude: location ? location.coords.latitude : 0,
-                        longitude: location ? location.coords.longitude : 0,
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
                         latitudeDelta: 0.1,
                         longitudeDelta: 0.1 
                       }}
@@ -359,8 +365,8 @@ const App = () => {
                     <Marker
                         title="Your location"
                         coordinate={{
-                            latitude: location ? location.coords.latitude : 0,
-                            longitude: location ? location.coords.longitude : 0
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude
                         }}
                     />
                     {mapComponent}
@@ -411,7 +417,9 @@ const App = () => {
 
               </View>
 
-
+              <Text>
+                {selectedWeather}
+              </Text>
 
           </>
           )}
